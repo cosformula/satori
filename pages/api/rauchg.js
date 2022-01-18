@@ -1,39 +1,31 @@
-import { GlobalFonts } from '@napi-rs/canvas'
-
-const { render } = require('@resvg/resvg-js')
-
+const { renderAsync } = require('@resvg/resvg-js')
 import { renderToPipeableStream } from 'react-dom/server'
 import { Writable } from 'stream'
 import { join } from 'path'
-import TextToSVG from 'text-to-svg'
+import opentype from 'opentype.js'
 
 import Component from '../rauchg'
 
-const FONT_ROBOTO = TextToSVG.loadSync(
-  join(process.cwd(), 'assets', 'Roboto-Regular.ttf')
-)
-const FONT_ROBOTO_BOLD = TextToSVG.loadSync(
-  join(process.cwd(), 'assets', 'Roboto-Bold.ttf')
-)
-globalThis.__SATORI_TextToSVG__ = {
-  Roboto: {
-    default: FONT_ROBOTO,
-    700: FONT_ROBOTO_BOLD,
-  },
-  default: {
-    default: FONT_ROBOTO,
-  },
-}
+let customFontsLoaded = false
+const loadingCustomFonts = (async () => {
+  const [FONT_ROBOTO, FONT_ROBOTO_BOLD] = await Promise.all([
+    opentype.load(join(process.cwd(), 'assets', 'Roboto-Regular.ttf')),
+    opentype.load(join(process.cwd(), 'assets', 'Roboto-Bold.ttf')),
+  ])
 
-GlobalFonts.registerFromPath(
-  join(process.cwd(), 'assets', 'Roboto-Regular.ttf'),
-  'Roboto'
-)
+  globalThis.__SATORI_OPENTYPE__ = {
+    Roboto: {
+      default: FONT_ROBOTO,
+      700: FONT_ROBOTO_BOLD,
+    },
+    default: {
+      default: FONT_ROBOTO,
+      700: FONT_ROBOTO_BOLD,
+    },
+  }
 
-GlobalFonts.registerFromPath(
-  join(process.cwd(), 'assets', 'Roboto-Bold.ttf'),
-  'Roboto'
-)
+  customFontsLoaded = true
+})()
 
 export const config = {
   unstable_includeFiles: ['assets'],
@@ -41,6 +33,10 @@ export const config = {
 
 export default async (req, res) => {
   const { title, width, height } = req.query
+
+  if (!customFontsLoaded) {
+    await loadingCustomFonts
+  }
 
   let didError
   const { abort, pipe } = renderToPipeableStream(
@@ -50,7 +46,7 @@ export default async (req, res) => {
         didError = true
         res.statusCode = 500
         res.end(error.message)
-        console.log(error)
+        console.error(error)
         abort()
       },
       onCompleteAll() {
@@ -70,17 +66,22 @@ export default async (req, res) => {
                   html.indexOf('</svg>') + 6
                 )
 
-                const pngData = render(svg, {
+                const data = await renderAsync(svg, {
                   fitTo: {
                     mode: 'width',
-                    value: 1686,
+                    value: 1200,
                   },
                   font: {
+                    fontFiles: [
+                      join(process.cwd(), 'assets', 'Roboto-Regular.ttf'),
+                      join(process.cwd(), 'assets', 'Roboto-Bold.ttf'),
+                    ], // Load custom fonts.
                     loadSystemFonts: false,
+                    defaultFontFamily: 'Roboto',
                   },
                 })
                 res.setHeader('content-type', 'image/png')
-                res.send(pngData)
+                res.send(data)
               })()
             },
           })
