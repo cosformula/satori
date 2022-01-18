@@ -12,6 +12,7 @@ function Test({ value }) {
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'column',
+        fontFamily: 'Roboto',
       }}
     >
       <div
@@ -34,7 +35,6 @@ function Test({ value }) {
           style={{
             marginLeft: 8,
             letterSpacing: -0.03,
-            fontFamily: 'sans-serif',
             fontSize: 20,
             fontWeight: 700,
           }}
@@ -46,7 +46,6 @@ function Test({ value }) {
         style={{
           padding: '20px 40px',
           letterSpacing: -0.05,
-          fontFamily: 'sans-serif',
           fontSize: 40,
           fontWeight: 700,
           width: 'auto',
@@ -62,8 +61,8 @@ function Test({ value }) {
   )
 }
 
-export default function App() {
-  const [value, setValue] = React.useState('2020 in Review')
+export default function App({ title, width = 800, height = 450 }) {
+  const [value, setValue] = React.useState(title || '2020 in Review')
 
   return (
     <>
@@ -87,7 +86,7 @@ export default function App() {
         }}
       >
         <Suspense fallback={null}>
-          <Satori width={800} height={450}>
+          <Satori width={width} height={height}>
             <Test value={value} />
           </Satori>
         </Suspense>

@@ -218,8 +218,8 @@ function Test({ value }) {
   )
 }
 
-export default function App() {
-  const [value, setValue] = React.useState('Hi')
+export default function App({ title = 'Hi' }) {
+  const [value, setValue] = React.useState(title)
 
   return (
     <>
