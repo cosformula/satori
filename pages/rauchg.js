@@ -13,6 +13,7 @@ function Test({ value }) {
         justifyContent: 'center',
         flexDirection: 'column',
         fontFamily: 'Roboto',
+        backgroundColor: 'white',
       }}
     >
       <div
