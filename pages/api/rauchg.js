@@ -1,4 +1,6 @@
-import { createCanvas, Image, GlobalFonts } from '@napi-rs/canvas'
+import { GlobalFonts } from '@napi-rs/canvas'
+
+const { render } = require('@resvg/resvg-js')
 
 import { renderToPipeableStream } from 'react-dom/server'
 import { Writable } from 'stream'
@@ -67,27 +69,18 @@ export default async (req, res) => {
                   html.indexOf('<svg '),
                   html.indexOf('</svg>') + 6
                 )
-                // res.end(svg)
-                // return
 
-                const image = new Image()
-                image.src = Buffer.from(svg, 'utf-8')
-
-                image.width = 1686
-                image.height = 956
-
-                const w = image.width
-                const h = image.height
-
-                // create a canvas of the same size as the image
-                const canvas = createCanvas(w, h)
-                const ctx = canvas.getContext('2d')
-
-                // fill the canvas with the image
-                ctx.drawImage(image, 0, 0)
-
+                const pngData = render(svg, {
+                  fitTo: {
+                    mode: 'width',
+                    value: 1686,
+                  },
+                  font: {
+                    loadSystemFonts: false,
+                  },
+                })
                 res.setHeader('content-type', 'image/png')
-                res.send(await canvas.encode('png'))
+                res.send(pngData)
               })()
             },
           })
