@@ -9,6 +9,11 @@ export default function Page() {
           <Link href='/test'>
             <a>test page</a>
           </Link>
+          &nbsp;(
+          <a href='/api/test?title=there%20is%20no%20puppeteer%20behind%20this'>
+            png
+          </a>
+          )
         </li>
         <li>
           <Link href='/rauchg'>
